@@ -29,7 +29,7 @@ def fit(train_loader, model, criterion, optimizer, epoch, params):
     loss = criterion(outputs, targets)
 
     train_outputs = torch.cat([train_outputs, outputs])
-    train_targets = torch.cat([train_targets, targets])
+    train_targets = torch.cat([train_targets.long(), targets])
     train_loss.append(loss.item())
     
     accuracy = accuracy_score_m(outputs, targets)
@@ -48,9 +48,9 @@ def fit(train_loader, model, criterion, optimizer, epoch, params):
     loss.backward()
     optimizer.step()
     
-    if val_steps==2:
-      break
-    val_steps+=1
+    #if val_steps==2:
+    #  break
+    #val_steps+=1
     stream.set_description("Epoch: {epoch}. Train. {metric_monitor}".format(epoch=epoch, metric_monitor=metric_monitor))
   accuracy = accuracy_score_m(train_outputs, train_targets)
   f1 = f1_score_m(train_outputs, train_targets)
@@ -78,7 +78,7 @@ def validate(val_loader, model, criterion, epoch, params):
       loss = criterion(outputs, targets)
 
       val_outputs = torch.cat([val_outputs, outputs])
-      val_targets = torch.cat([val_targets, targets])
+      val_targets = torch.cat([val_targets.long(), targets])
       val_loss.append(loss.item())
       
       accuracy = accuracy_score_m(outputs, targets)
@@ -91,9 +91,9 @@ def validate(val_loader, model, criterion, epoch, params):
         metric_monitor.update("AUC", auc)
       except:
         pass
-      if val_steps==2:
-        break
-      val_steps+=1
+      #if val_steps==2:
+      #  break
+      #val_steps+=1
       stream.set_description("Epoch: {epoch}. Validation. {metric_monitor}".format(epoch=epoch, metric_monitor=metric_monitor))
   accuracy = accuracy_score_m(val_outputs, val_targets)
   f1 = f1_score_m(val_outputs, val_targets)    

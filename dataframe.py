@@ -46,12 +46,12 @@ def create_df(dir, file_name, export_csv=False, subset = False, whole = False):
       df.to_csv(f'{dir}/{file_name}_whole.csv', index=False)
     return df.reset_index(drop=True)
   
-  df, df_val = train_test_split(df, random_state=42, test_size=0.20, shuffle=True, stratify=df['target'])
+  df, df_val = train_test_split(df, random_state=42, test_size=0.33, shuffle=True, stratify=df['target'])
   if subset:
-    _, subset_ = train_test_split(df, random_state=42, test_size=0.1, shuffle=True, stratify=df['target'])
+    subset_, subset_val = train_test_split(df, random_state=42, test_size=0.15, shuffle=True, stratify=df['target'])
     if export_csv:
       df.to_csv(f'{dir}/subset.csv', index=False)
-    return subset_.reset_index(drop=True), df_val.reset_index(drop=True)
+    return subset_.reset_index(drop=True), subset_val.reset_index(drop=True)
   if export_csv:
     df.to_csv(f'{dir}/train.csv', index=False)
     df_val.to_csv(f'{dir}/val.csv', index=False)

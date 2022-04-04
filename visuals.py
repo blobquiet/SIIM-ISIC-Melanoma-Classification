@@ -6,6 +6,9 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix
 import numpy as np
 
+model_name = params["model"]
+aug = 'aug' if params['augmentation'] else 'no_aug'
+
 def save_metrics(metric_list, labels_list, path, plot=False):
   for i in range(len(labels_list)):
     plt.figure(figsize=(7, 4))
@@ -14,7 +17,7 @@ def save_metrics(metric_list, labels_list, path, plot=False):
     plt.xlabel('epochs')
     plt.ylabel(labels_list[i])
     plt.legend()
-    plt.savefig(f"{path}/{labels_list[i]}.png")
+    plt.savefig(f"/home/usuaris/dduenas/scripts/models/{labels_list[i]}_{model_name}_{aug}.png")
     plt.show() if plot else plt.close()
 
 def save_epoch_lr(lr_list, lr_label, path, plot = False):
@@ -23,7 +26,7 @@ def save_epoch_lr(lr_list, lr_label, path, plot = False):
   plt.xlabel('epochs')
   plt.ylabel(lr_label)
   plt.legend()
-  plt.savefig(f"{path}/{lr_label}.png")
+  plt.savefig(f"/home/usuaris/dduenas/scripts/models/{lr_label}_{model_name}_{aug}.png")
   plt.show() if plot else plt.close()
    
 def save_confusion_matrix_m(outputs, targets, path, label, classes=None, plot=False, percentage=True):
@@ -37,6 +40,6 @@ def save_confusion_matrix_m(outputs, targets, path, label, classes=None, plot=Fa
   df_cm = pd.DataFrame(cf_matrix/np.sum(cf_matrix) if percentage else cf_matrix, index = [i for i in classes], columns = [i for i in classes])
   sn.heatmap(df_cm, annot=True, cmap='Blues')
   plt.title(f'{label} Confusion Matrix')
-  plt.savefig(f'{path}/{label}_cm.png')
+  plt.savefig(f'/home/usuaris/dduenas/scripts/models/{label}_cm__{model_name}_{aug}.png')
   plt.show() if plot else plt.close()
   plt.clf()

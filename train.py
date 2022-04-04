@@ -6,27 +6,27 @@ from visuals import save_metrics, save_epoch_lr
 from params import *
 from dataframe import create_df
 from dataloader import data_loader
-from params import *
 
 from model import MelanomaClassifier
 from lr_scheduler import LRSchedulerPlateau
+
 from early_stopping import EarlyStopping
 from metrics import get_lr
+from augmentations import transform_aug, transform_normalize
 
 from visuals import save_metrics
 
 from fit import fit, validate
 
 from timm.optim import AdamP
-from timm.loss import BinaryCrossEntropy
 
 from torch.utils.data import DataLoader
-aug_transform = transform_aug(params['im_size']) if params['augmentation'] else (None,None)
 
-df, df_val = create_df(dir=params['path'], file_name='train', subset=True)
+aug_transform = transform_aug(params['im_size']) if params['augmentation'] else transform_normalize(params['im_size'])
 
-# Subset
-df = df[:500]
+df, df_val = create_df(dir=params['path'], file_name='train')
+print("df:",df.shape)
+print("df_val:",df_val.shape)
 
 train_loader, val_loader = data_loader(df, df_val, transform_tuple = aug_transform, batch_size = params['batch_size'])
 
@@ -37,13 +37,17 @@ best_=0
 
 
 model = MelanomaClassifier(params['model'],n_class=8,pretrained=True)
+
+
 optimizer = AdamP(model.parameters(), lr=params['lr'])
 criterion = nn.CrossEntropyLoss()
 # criterion = nn.CrossEntropyLoss(reduction='mean',weight=torch.tensor([0.2,1]))
+
 lr_scheduler = LRSchedulerPlateau(optimizer)
 early_stopping = EarlyStopping()
 
 model.to(params['device'])
+
 
 for epoch in range(1, params["epochs"] + 1):
   train_epoch_loss, train_epoch_acc, train_epoch_f1, train_epoch_auc = fit(train_loader, model, criterion, optimizer, epoch, params)
@@ -53,7 +57,7 @@ for epoch in range(1, params["epochs"] + 1):
   if val_epoch_f1 > best_:
     best_ = val_epoch_f1
     aug = 'aug' if params['augmentation'] else 'no_aug'
-    torch.save(model, f'{PATH}/{params["model"]}_{aug}.pth')
+    torch.save(model, f'/home/usuaris/dduenas/scripts/models/{params["model"]}_{aug}.pth')
     print(f"Saving current best model: {best_:.3f}\n")
 
   if params['lr_scheduler']:
@@ -65,10 +69,10 @@ for epoch in range(1, params["epochs"] + 1):
   lr_ = get_lr(optimizer)
   fit_lr.append(lr_)
   print('learning rate:',lr_)
+
+  metrics = [(train_loss,val_loss), (train_acc,val_acc), (train_f1,val_f1), (train_auc,val_auc)]
+  names = ['loss', 'accuracy', 'f1', 'auc']
+  save_metrics(metrics, names, path=PATH, plot=False)
+  save_epoch_lr(fit_lr, lr_label= f'learning rate', path=PATH, plot=False)
 end = time.time()
 print(f"Training time: {(end-start)/60:.3f} minutes")
-
-metrics = [(train_loss,val_loss), (train_acc,val_acc), (train_f1,val_f1), (train_auc,val_auc)]
-names = ['loss', 'accuracy', 'f1', 'auc']
-save_metrics(metrics, names, path=PATH, plot=False)
-save_epoch_lr(fit_lr, lr_label= f'learning rate', path=PATH, plot=False)

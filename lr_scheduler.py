@@ -1,6 +1,6 @@
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 class LRSchedulerPlateau():
-  def __init__(self, optimizer, patience_t=1, mode="min", factor=0.8, min_lr=1e-7):
+  def __init__(self, optimizer, patience_t=0, mode="min", factor=0.1, min_lr=1e-6):
     self.optimizer = optimizer
     self.patience_t = patience_t
     self.mode = mode
