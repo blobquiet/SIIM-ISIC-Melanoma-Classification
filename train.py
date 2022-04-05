@@ -1,3 +1,4 @@
+from re import A
 from torch import nn
 from tqdm import tqdm
 import time
@@ -9,6 +10,8 @@ from dataloader import data_loader
 
 from model import MelanomaClassifier
 from lr_scheduler import LRSchedulerPlateau
+from lr_scheduler_cosine import LRCosineScheduler
+from focal_loss import FocalLoss
 
 from early_stopping import EarlyStopping
 from metrics import get_lr
@@ -38,12 +41,17 @@ best_=0
 
 model = MelanomaClassifier(params['model'],n_class=8,pretrained=True)
 
+if params['focal_loss']:
+  whole =create_df(dir=params['path'], file_name='train', whole=True)
+  weights = list(1-whole['target'].value_counts().sort_index()/len(whole))
+  criterion = FocalLoss(weight=torch.tensor(weights).to(params['device']),gamma=0.99)
+else: 
+  criterion = nn.CrossEntropyLoss()
 
 optimizer = AdamP(model.parameters(), lr=params['lr'])
-criterion = nn.CrossEntropyLoss()
-# criterion = nn.CrossEntropyLoss(reduction='mean',weight=torch.tensor([0.2,1]))
+# lr_scheduler = LRSchedulerPlateau(optimizer)
+lr_scheduler = LRCosineScheduler(optimizer, t_initial=params['epochs'])
 
-lr_scheduler = LRSchedulerPlateau(optimizer)
 early_stopping = EarlyStopping()
 
 model.to(params['device'])
