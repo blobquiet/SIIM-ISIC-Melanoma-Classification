@@ -6,11 +6,12 @@ from visuals import save_confusion_matrix_m
 from tqdm import tqdm
 from params import *
 from torch import nn
+from focal_loss_ import *
 
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 
-def fit(train_loader, model, criterion, optimizer, epoch, params):
+def fit(train_loader, model, criterion, optimizer, epoch, params, samples_per_cls=None):
   metric_monitor = MetricMonitor()
   model.train()
   stream = tqdm(train_loader)
@@ -26,7 +27,10 @@ def fit(train_loader, model, criterion, optimizer, epoch, params):
     images = images.to(params["device"], non_blocking=True)
     targets = targets.to(params["device"], non_blocking=True).long().squeeze()
     outputs = model(images)
-    loss = criterion(outputs, targets)
+    if samples_per_cls!=None:
+      loss =  CB_loss(outputs, targets, samples_per_cls, 8, 'focal', beta=0.9999, gamma=0.5)
+    else:
+      loss = criterion(outputs, targets)
 
     train_outputs = torch.cat([train_outputs, outputs])
     train_targets = torch.cat([train_targets.long(), targets])
@@ -61,7 +65,7 @@ def fit(train_loader, model, criterion, optimizer, epoch, params):
   return mean(train_loss), accuracy, f1, auc
 
 
-def validate(val_loader, model, criterion, epoch, params):
+def validate(val_loader, model, criterion, epoch, params, samples_per_cls=None):
   metric_monitor = MetricMonitor()
   model.eval()
   stream = tqdm(val_loader)
@@ -75,7 +79,10 @@ def validate(val_loader, model, criterion, epoch, params):
       images = images.to(params["device"], non_blocking=True)
       targets = target.to(params["device"], non_blocking=True).long().squeeze()
       outputs = model(images)
-      loss = criterion(outputs, targets)
+      if samples_per_cls!=None:
+        loss =  CB_loss(outputs, targets, samples_per_cls, 8, 'focal', beta=0.9999, gamma=0.5)
+      else:
+        loss = criterion(outputs, targets)
 
       val_outputs = torch.cat([val_outputs, outputs])
       val_targets = torch.cat([val_targets.long(), targets])

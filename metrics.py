@@ -21,7 +21,7 @@ def auc_score_m(outputs, targets, multi_class='ovr'):
   outputs = nn.functional.softmax(outputs, dim=1)
   outputs = outputs.detach().numpy()
   targets = targets.cpu().detach().numpy()
-  auc = roc_auc_score(targets, outputs, multi_class=multi_class)
+  auc = roc_auc_score(targets, outputs, multi_class=multi_class, average='weighted')
   return auc
 
 def f1_score_(outputs, targets):
@@ -60,8 +60,8 @@ def save_roc_curve_m(outputs, targets, path, label, pos_label, plot=False, multi
   outputs = outputs.detach().numpy()
   targets = targets.cpu().detach().numpy()
   false_positive_rate, true_positive_rate, thresholds = roc_curve(targets, outputs_.detach().numpy(), pos_label=pos_label)
-  auc = roc_auc_score(targets, outputs, multi_class='ovr')
-  plt.plot(false_positive_rate[2],true_positive_rate[2],color="darkorange",label="ROC curve (area = %0.2f)" % auc)
+  auc = roc_auc_score(targets, outputs, multi_class='ovr', average='weighted')
+  plt.plot(false_positive_rate[1],true_positive_rate[1],color="darkorange",label="ROC curve (area = %0.2f)" % auc)
   plt.plot(false_positive_rate, true_positive_rate, lw=2, color='darkorange')
   plt.plot([0, 1], [0, 1], color="navy", lw=2, linestyle="--")
   plt.xlim([-0.05, 1.05])
