@@ -7,6 +7,7 @@ from tqdm import tqdm
 from params import *
 from torch import nn
 from focal_loss_ import *
+from focal_loss__ import *
 
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
@@ -29,6 +30,7 @@ def fit(train_loader, model, criterion, optimizer, epoch, params, samples_per_cl
     outputs = model(images)
     if samples_per_cls!=None:
       loss =  CB_loss(outputs, targets, samples_per_cls, 8, 'focal', beta=0.9999, gamma=0.5)
+      #loss = FocalLoss(gamma=0.5)(outputs, targets)
     else:
       loss = criterion(outputs, targets)
 
@@ -41,18 +43,17 @@ def fit(train_loader, model, criterion, optimizer, epoch, params, samples_per_cl
     metric_monitor.update("Loss", loss.item())
     metric_monitor.update("Accuracy", accuracy)
     metric_monitor.update("F1", f1)
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
         
     try:
       auc = auc_score_m(outputs, targets)
       metric_monitor.update("AUC", auc)
     except:
       pass
-
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    
-    #if val_steps==2:
+    #if val_steps==25:
     #  break
     #val_steps+=1
     stream.set_description("Epoch: {epoch}. Train. {metric_monitor}".format(epoch=epoch, metric_monitor=metric_monitor))
@@ -81,6 +82,7 @@ def validate(val_loader, model, criterion, epoch, params, samples_per_cls=None):
       outputs = model(images)
       if samples_per_cls!=None:
         loss =  CB_loss(outputs, targets, samples_per_cls, 8, 'focal', beta=0.9999, gamma=0.5)
+        #loss = FocalLoss(gamma=0.5)(outputs, targets)
       else:
         loss = criterion(outputs, targets)
 
